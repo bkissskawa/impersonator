@@ -3,6 +3,7 @@ package org.bouncycastle.tls;
 import org.bouncycastle.tls.crypto.TlsAgreement;
 import org.bouncycastle.tls.crypto.TlsSecret;
 import org.bouncycastle.tls.crypto.TlsStreamSigner;
+import org.bouncycastle.tls.crypto.impl.AbstractTlsSecret;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.Integers;
 
@@ -791,6 +792,10 @@ public class TlsClientProtocol
         default:
             throw new TlsFatalAlert(AlertDescription.unexpected_message);
         }
+
+        if (tlsClientContext.getSecurityParameters().clientRandom != null && tlsClientContext.getSecurityParameters().masterSecret != null)
+            SslKeyLogWriter.logBcClientRandom(tlsClientContext.getSecurityParameters().clientRandom,
+                    ((AbstractTlsSecret) tlsClientContext.getSecurityParameters().masterSecret).copyData(), null);
     }
 
     protected void handleServerCertificate()
