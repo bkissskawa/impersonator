@@ -2,6 +2,7 @@ package okhttp3;
 
 import com.github.zhkl0228.impersonator.ImpersonatorApi;
 import com.github.zhkl0228.impersonator.ImpersonatorFactory;
+import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,16 +113,18 @@ class DefaultHttpClientFactory extends OkHttpClientFactory {
             Request request = chain.request();
             Request.Builder builder = request.newBuilder();
             Map<String, String> headers = new LinkedHashMap<>();
-            Headers requestHeaders = request.headers();
-            for (String name : requestHeaders.names()) {
-                String value = requestHeaders.get(name);
-                log.debug("intercept name={} value={}", name, value);
-                builder.removeHeader(name);
-                headers.put(name, value);
+            boolean hasUserAgent = false;
+
+            for (Pair<? extends String, ? extends String> kvp: request.headers()) {
+                headers.put(kvp.getFirst(), kvp.getSecond());
+
+                if (kvp.getFirst().equalsIgnoreCase("user-agent"))
+                    hasUserAgent = true;
             }
-            if (userAgent != null) {
-                headers.put("User-Agent", userAgent);
-            }
+
+            if (!hasUserAgent && userAgent != null)
+                headers.put("User-Agent", this.userAgent);
+
             onInterceptRequest(builder, headers);
             return chain.proceed(builder.build());
         }
